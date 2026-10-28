@@ -6,6 +6,10 @@ on:
       - main
       - master
 
+env:
+  AZURE_WEBAPP_NAME: KrvkoAPI
+  IMAGE_NAME: krvko_api
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,3 +49,15 @@ jobs:
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/krvko_api:latest
             ${{ secrets.DOCKER_USERNAME }}/krvko_api:${{ github.sha }}
+
+deploy:
+  runs-on: ubuntu-latest
+  needs: build
+
+  steps:
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v3
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        image: index.docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
