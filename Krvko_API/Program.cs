@@ -7,7 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-//Raul je gay
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
