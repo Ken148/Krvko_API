@@ -7,7 +7,7 @@ on:
       - master
 
 env:
-  AZURE_WEBAPP_NAME: KrvkoAPI
+  AZURE_WEBAPP_NAME: KrvkoAPI2
   IMAGE_NAME: krvko_api
 
 jobs:
