@@ -8,7 +8,7 @@ namespace Krvko_API.Controllers
     {
         private static readonly string[] Summaries =
         [
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorc9hing"
         ];
 
         [HttpGet(Name = "GetWeatherForecast")]
