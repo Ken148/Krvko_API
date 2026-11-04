@@ -2,6 +2,9 @@
 {
     public class TEST
     {
-
+        public TEST()
+        {
+            Console.WriteLine("Hello World!");
+        }
     }
 }
