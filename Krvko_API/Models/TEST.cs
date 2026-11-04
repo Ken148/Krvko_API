@@ -4,7 +4,7 @@
     {
         public TEST()
         {
-            Console.WriteLine("Hello Worlddddddddddddd!");
+            Console.WriteLine("Hello World!");
         }
     }
 }
