@@ -6,10 +6,6 @@ on:
       - main
       - master
 
-env:
-  AZURE_WEBAPP_NAME: KrvkoAPI2
-  IMAGE_NAME: krvko-api
-
 jobs:
   build:
     runs-on: ubuntu-latest
