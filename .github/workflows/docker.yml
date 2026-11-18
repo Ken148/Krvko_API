@@ -11,6 +11,63 @@ env:
   IMAGE_NAME: krvko_api
   
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ${{ env.Krvko_API }}
+        
+      - name: Build
+        run: dotnet build ${{ env.Krvko_API }} --configuration Release --no-restore
+
+      - name: Run MSTest tests
+        run: >
+          dotnet test ${{ env.Krvko_API }}
+          --configuration Release --no-build
+          --logger "trx; LogFileName=test-results.trx"
+          --collect "Code Coverage;Format=cobertura"
+          --results-directory TestResults
+
+      - name: Test report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: MSTest rezultati
+          path: TestResults/*.trx
+          reporter: dotnet-trx
+
+      - name: Coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        if: always()
+        with:
+          reports: TestResults/**/*.cobertura.xml
+          targetdir: CoverageReport
+          reporttype: HtmlInline:MarkdownSummaryGitHub
+
+      - name: Coverage summary
+        if: always()
+        run: cat CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            TestResults
+            CoverageReport
+        
   build:
     runs-on: ubuntu-latest
     permissions:
