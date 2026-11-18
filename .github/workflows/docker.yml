@@ -9,6 +9,8 @@ on:
 env:
   AZURE_WEBAPP_NAME: KrvkoAPI
   IMAGE_NAME: krvko_api
+  API_PROJECT: Krvko_API/Krvko_API.csproj
+  TEST_PROJECT: Krvko_API.Tests/Krvko_API.Tests.csproj
   
 jobs:
   test:
@@ -26,14 +28,14 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore ${{ env.Krvko_API }}
+        run: dotnet restore ${{ env.API_PROJECT }}
         
       - name: Build
-        run: dotnet build ${{ env.Krvko_API }} --configuration Release --no-restore
+        run: dotnet build ${{ env.API_PROJECT }} --configuration Release --no-restore
 
       - name: Run MSTest tests
         run: >
-          dotnet test ${{ env.Krvko_API }}
+          dotnet test ${{ env.TEST_PROJECT }}
           --configuration Release --no-build
           --logger "trx; LogFileName=test-results.trx"
           --collect "Code Coverage;Format=cobertura"
