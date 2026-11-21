@@ -1,0 +1,123 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+env:
+  AZURE_WEBAPP_NAME: KrvkoAPI
+  IMAGE_NAME: krvko_api
+  API_PROJECT: Krvko_API/Krvko_API.csproj
+  TEST_PROJECT: Krvko_API.test/Krvko_API.test.csproj
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ${{ env.TEST_PROJECT }}
+
+      - name: Build
+        run: dotnet build ${{ env.TEST_PROJECT }} --configuration Release --no-restore
+
+      - name: Run MSTest tests
+        run: >
+          dotnet test ${{ env.TEST_PROJECT }}
+          --configuration Release --no-build
+          --logger "trx;LogFileName=test-results.trx"
+          --collect "Code Coverage;Format=cobertura"
+          --results-directory TestResults
+
+      - name: Test report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: MSTest rezultati
+          path: TestResults/*.trx
+          reporter: dotnet-trx
+
+      - name: Coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        if: always()
+        with:
+          reports: TestResults/**/*.cobertura.xml
+          targetdir: CoverageReport
+          reporttype: HtmlInline;MarkdownSummaryGithub
+
+      - name: Coverage summary
+        if: always()
+        run: cat CoverageReport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: |
+            TestResults
+            CoverageReport
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ${{ env.API_PROJECT }}
+
+      - name: Build
+        run: dotnet build ${{ env.API_PROJECT }} --configuration Release --no-restore
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Krvko_API/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          images: index.docker.io/${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
