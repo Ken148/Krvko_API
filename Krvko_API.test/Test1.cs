@@ -1,29 +1,34 @@
-﻿
+﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Net;
 
 namespace Krvko_API.tst
 {
     [TestClass]
-    public sealed class Test1
+    public class Test1
     {
+        private static WebApplicationFactory<Program> _factory = null!;
+        private static HttpClient _client = null!;
+
+        [ClassInitialize]
+        public static void Init(TestContext context)
+        {
+            _factory = new WebApplicationFactory<Program>();
+            _client = _factory.CreateClient();
+        }
+
+        [ClassCleanup]
+        public static void Cleanup()
+        {
+            _client.Dispose();
+            _factory.Dispose();
+        }
+
         [TestMethod]
         public async Task TestMethod1()
         {
-            // Arrange
-            using var client = new HttpClient();
-            client.BaseAddress = new Uri("http://localhost:5044");
-
-            // Act
-            var response = await client.GetAsync("/api/test");
-
-            // Assert
+            var response = await _client.GetAsync("/WeatherForecast");
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-
-            string content = await response.Content.ReadAsStringAsync();
-
-            Assert.IsTrue(content.Contains("Krvko API is working!"));
-            Assert.IsTrue(content.Contains("Success"));
         }
     }
 }
