@@ -55,7 +55,7 @@ jobs:
         with:
           reports: TestResults/**/*.cobertura.xml
           targetdir: CoverageReport
-          reporttype: HtmlInline;MarkdownSummaryGithub
+          reporttypes: HtmlInline;MarkdownSummaryGithub
 
       - name: Coverage summary
         if: always()
